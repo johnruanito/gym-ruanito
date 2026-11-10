@@ -35,7 +35,7 @@ jobs:
             awk -F, 'NR>1 {m+=$8; c+=$9} END {printf "### Cobertura de linhas (backend): %.1f%%\n", 100*c/(m+c)}' \
               target/site/jacoco/jacoco.csv >> "$GITHUB_STEP_SUMMARY"
           fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: backend-coverage
@@ -76,7 +76,7 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
