@@ -1,7 +1,7 @@
 # Academia 2.0
 
-[![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/ci.yml)
-[![Security](https://github.com/OWNER/REPO/actions/workflows/security.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/security.yml)
+[![CI](https://github.com/johnruanito/gym-ruanito/actions/workflows/ci.yml/badge.svg)](https://github.com/johnruanito/gym-ruanito/actions/workflows/ci.yml)
+[![Security](https://github.com/johnruanito/gym-ruanito/actions/workflows/security.yml/badge.svg)](https://github.com/johnruanito/gym-ruanito/actions/workflows/security.yml)
 
 Sistema de cadastro de alunos e controle de entrada/saída de academia. É a reescrita do projeto
 original em Java EE (JSF + EJB + JPA/MySQL + WildFly) para uma stack atual, com API REST e SPA.
