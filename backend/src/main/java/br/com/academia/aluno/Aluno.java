@@ -5,11 +5,14 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import org.hibernate.annotations.TenantId;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -19,8 +22,20 @@ import java.util.Objects;
 @Table(name = "aluno")
 public class Aluno {
 
+    /** Chave técnica. A matrícula é única só dentro de cada academia, então não serve mais como PK. */
     @Id
-    @Column(name = "matricula", length = 10)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    /**
+     * Academia dona do registro. Preenchido pelo Hibernate no INSERT e usado como filtro automático
+     * em toda consulta: o código de negócio nunca precisa passar academia_id à mão.
+     */
+    @TenantId
+    @Column(name = "academia_id", nullable = false, updatable = false)
+    private Long academiaId;
+
+    @Column(name = "matricula", nullable = false, updatable = false, length = 10)
     private String matricula;
 
     @Column(name = "nome", nullable = false, length = 100)
@@ -99,6 +114,8 @@ public class Aluno {
         atualizadoEm = Instant.now();
     }
 
+    public Long getId() { return id; }
+    public Long getAcademiaId() { return academiaId; }
     public String getMatricula() { return matricula; }
     public String getNome() { return nome; }
     public Sexo getSexo() { return sexo; }
@@ -115,11 +132,11 @@ public class Aluno {
 
     @Override
     public boolean equals(Object o) {
-        return this == o || (o instanceof Aluno other && matricula != null && matricula.equals(other.matricula));
+        return this == o || (o instanceof Aluno other && id != null && id.equals(other.id));
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(matricula);
+        return Aluno.class.hashCode();
     }
 }

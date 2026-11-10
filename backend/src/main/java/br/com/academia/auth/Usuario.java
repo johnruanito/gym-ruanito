@@ -17,6 +17,13 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Academia à qual o usuário pertence. Sem {@code @TenantId} de propósito: no login ainda não
+     * sabemos a academia, e é justamente o usuário que nos diz qual é.
+     */
+    @Column(name = "academia_id", nullable = false, updatable = false)
+    private Long academiaId;
+
     @Column(name = "username", nullable = false, length = 50)
     private String username;
 
@@ -37,7 +44,8 @@ public class Usuario {
     protected Usuario() {
     }
 
-    public Usuario(String username, String senhaHash, String nome, Papel papel) {
+    public Usuario(Long academiaId, String username, String senhaHash, String nome, Papel papel) {
+        this.academiaId = academiaId;
         this.username = username;
         this.senhaHash = senhaHash;
         this.nome = nome;
@@ -45,6 +53,7 @@ public class Usuario {
     }
 
     public Long getId() { return id; }
+    public Long getAcademiaId() { return academiaId; }
     public String getUsername() { return username; }
     public String getSenhaHash() { return senhaHash; }
     public String getNome() { return nome; }

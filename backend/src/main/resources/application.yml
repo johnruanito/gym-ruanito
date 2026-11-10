@@ -18,6 +18,8 @@ spring:
       hibernate:
         jdbc:
           time_zone: UTC
+        # Multi-academia: o Hibernate pergunta a esta classe qual academia filtrar (ver TenantResolver)
+        tenant_identifier_resolver: br.com.academia.shared.tenant.TenantResolver
   flyway:
     locations: classpath:db/migration
   mvc:

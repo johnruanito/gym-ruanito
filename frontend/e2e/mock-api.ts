@@ -50,7 +50,7 @@ export async function mockApi(page: Page, seed: Partial<MockState> = {}): Promis
 
     if (method === "POST" && path === "/auth/login") {
       return body?.password === "senha-correta"
-        ? json(route, 200, { accessToken: "t", expiresAt: new Date(Date.now() + 3.6e6).toISOString(), nome: "Recepção", papel: "ADMIN" })
+        ? json(route, 200, { accessToken: "t", expiresAt: new Date(Date.now() + 3.6e6).toISOString(), nome: "Recepção", papel: "ADMIN", academia: "Academia Teste" })
         : problem(route, 401, "Usuário ou senha inválidos");
     }
     if (!req.headers()["authorization"]) return problem(route, 401, "Não autenticado");

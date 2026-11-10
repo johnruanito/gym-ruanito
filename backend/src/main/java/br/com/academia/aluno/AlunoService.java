@@ -28,7 +28,7 @@ public class AlunoService {
     }
 
     public Aluno buscar(String matricula) {
-        return alunos.findById(matricula)
+        return alunos.findByMatricula(matricula)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Aluno " + matricula + " não encontrado"));
     }
 

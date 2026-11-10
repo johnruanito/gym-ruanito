@@ -25,6 +25,7 @@ test.describe("autenticação", () => {
     await page.getByLabel("Senha").fill("senha-correta");
     await page.getByRole("button", { name: "Entrar" }).click();
     await expect(page.getByRole("heading", { name: "Entradas e saídas" })).toBeVisible();
+    await expect(page.getByText("Academia Teste")).toBeVisible(); // academia do usuário no cabeçalho
   });
 });
 

@@ -51,7 +51,10 @@ export function Layout() {
             ))}
           </nav>
           <div className="flex items-center gap-3 text-sm">
-            <span className="hidden text-zinc-500 sm:inline">{session?.nome}</span>
+            <span className="hidden text-right leading-tight sm:block">
+              <span className="block text-zinc-900">{session?.academia}</span>
+              <span className="block text-xs text-zinc-500">{session?.nome}</span>
+            </span>
             <button onClick={logout} className="text-zinc-600 hover:text-zinc-900">
               Sair
             </button>

@@ -139,7 +139,10 @@
                             <fileSets>
                                 <fileSet>
                                     <directory>${project.build.directory}</directory>
-                                    <includes><include>*.exec</include></includes>
+                                    <includes>
+                                        <include>jacoco.exec</include>
+                                        <include>jacoco-it.exec</include>
+                                    </includes>
                                 </fileSet>
                             </fileSets>
                             <destFile>${project.build.directory}/jacoco-merged.exec</destFile>
