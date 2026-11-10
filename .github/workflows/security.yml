@@ -1,0 +1,83 @@
+# Recomendado: fixar as actions de terceiros pelo SHA do commit (ex.: trivy-action@<sha> # v0.36.0).
+# Tags podem ser reescritas; o Dependabot (github-actions) continua atualizando o SHA.
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 6 * * 1" # semanal: CVEs novas aparecem mesmo sem mudança de código
+
+permissions:
+  contents: read
+
+jobs:
+  codeql:
+    name: CodeQL (SAST)
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: java-kotlin
+            build-mode: none # análise sem compilar: não depende do Maven no job
+          - language: javascript-typescript
+            build-mode: none
+    steps:
+      - uses: actions/checkout@v5
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          queries: security-extended
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:${{ matrix.language }}
+
+  trivy-fs:
+    name: Trivy (dependências + IaC)
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v5
+      # Dependências (pom.xml, package-lock.json), segredos e má configuração (Dockerfile, compose)
+      - uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scanners: vuln,secret,misconfig
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          format: sarif
+          output: trivy-fs.sarif
+      - uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: trivy-fs.sarif
+          category: trivy-fs
+
+  trivy-images:
+    name: Trivy (imagens)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          docker build -t academia-api:ci backend
+          docker build -t academia-web:ci frontend
+      - name: Scan api
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: academia-api:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+      - name: Scan web
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: academia-web:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"

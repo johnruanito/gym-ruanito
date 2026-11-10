@@ -1,0 +1,12 @@
+.env
+# backend
+backend/target/
+*.iml
+.idea/
+# frontend
+frontend/node_modules/
+frontend/dist/
+# SO
+.DS_Store
+frontend/test-results/
+frontend/playwright-report/

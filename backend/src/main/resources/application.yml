@@ -1,0 +1,83 @@
+spring:
+  application:
+    name: academia-api
+  threads:
+    virtual:
+      enabled: true          # Java 21: um virtual thread por requisição
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/academia}
+    username: ${DB_USERNAME:academia}
+    password: ${DB_PASSWORD:academia}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+  jpa:
+    open-in-view: false      # sem lazy-loading escondido na camada web
+    hibernate:
+      ddl-auto: validate     # o schema é responsabilidade do Flyway; o Hibernate só confere
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    locations: classpath:db/migration
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  shutdown: graceful
+  forward-headers-strategy: framework
+  compression:
+    enabled: true
+
+academia:
+  zone: ${ACADEMIA_ZONE:America/Belem}
+  acesso:
+    permanencia-maxima: ${ACADEMIA_PERMANENCIA_MAXIMA:12h}
+  jwt:
+    secret: ${JWT_SECRET:dev-only-secret-change-me-0123456789abcdef}
+    ttl: ${JWT_TTL:8h}
+    issuer: academia-api
+  admin:
+    username: ${ACADEMIA_ADMIN_USERNAME:}
+    password: ${ACADEMIA_ADMIN_PASSWORD:}
+    nome: ${ACADEMIA_ADMIN_NOME:Administrador}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      # histograma de latência por rota → p95/p99 no Grafana
+      percentiles-histogram:
+        http.server.requests: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+academia:
+  jwt:
+    secret: ${JWT_SECRET}    # sem valor padrão em produção: falha no start se não definido
+logging:
+  structured:
+    format:
+      console: ecs           # logs JSON (Elastic Common Schema): prontos para Loki/ELK
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
