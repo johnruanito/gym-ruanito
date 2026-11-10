@@ -27,7 +27,7 @@ jobs:
           - language: javascript-typescript
             build-mode: none
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
@@ -43,7 +43,7 @@ jobs:
     permissions:
       security-events: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       # Dependências (pom.xml, package-lock.json), segredos e má configuração (Dockerfile, compose)
       - uses: aquasecurity/trivy-action@v0.36.0
         with:
@@ -63,7 +63,7 @@ jobs:
     name: Trivy (imagens)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           docker build -t academia-api:ci backend
           docker build -t academia-web:ci frontend
