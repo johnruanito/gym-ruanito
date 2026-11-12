@@ -9,7 +9,15 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface AlunoRepository extends JpaRepository<Aluno, String>, JpaSpecificationExecutor<Aluno> {
+/**
+ * Todas as consultas daqui são filtradas pela academia do usuário logado (via {@code @TenantId} em
+ * {@link Aluno}). Por isso "existsByCpf" significa "existe na MINHA academia".
+ * <p>
+ * A API identifica alunos pela matrícula ({@link #findByMatricula}); o id é só chave técnica interna.
+ */
+public interface AlunoRepository extends JpaRepository<Aluno, Long>, JpaSpecificationExecutor<Aluno> {
+
+    Optional<Aluno> findByMatricula(String matricula);
 
     Optional<Aluno> findByRg(String rg);
 
@@ -29,5 +37,5 @@ public interface AlunoRepository extends JpaRepository<Aluno, String>, JpaSpecif
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select a from Aluno a where a.matricula = :matricula")
-    Optional<Aluno> findByIdForUpdate(@Param("matricula") String matricula);
+    Optional<Aluno> findByMatriculaForUpdate(@Param("matricula") String matricula);
 }

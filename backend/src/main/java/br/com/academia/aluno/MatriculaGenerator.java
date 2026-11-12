@@ -1,5 +1,6 @@
 package br.com.academia.aluno;
 
+import br.com.academia.shared.tenant.TenantContext;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -14,6 +15,9 @@ import java.time.Year;
  * O sistema antigo fazia {@code SELECT MAX(matricula)} + 1: dois cadastros simultâneos liam o mesmo
  * máximo e geravam a mesma chave primária. Aqui um contador por ano é incrementado com um único
  * {@code INSERT ... ON CONFLICT DO UPDATE ... RETURNING}, que é atômico no PostgreSQL.
+ * <p>
+ * Atenção: SQL nativo (JdbcClient) NÃO passa pelo filtro de tenant do Hibernate. Por isso o
+ * academia_id é informado explicitamente aqui.
  */
 @Component
 class MatriculaGenerator {
@@ -30,10 +34,11 @@ class MatriculaGenerator {
     public String proxima() {
         Year ano = Year.now(clock);
         Integer sequencial = jdbc.sql("""
-                        INSERT INTO matricula_sequencia (ano, ultimo) VALUES (:ano, 1)
-                        ON CONFLICT (ano) DO UPDATE SET ultimo = matricula_sequencia.ultimo + 1
+                        INSERT INTO matricula_sequencia (academia_id, ano, ultimo) VALUES (:academia, :ano, 1)
+                        ON CONFLICT (academia_id, ano) DO UPDATE SET ultimo = matricula_sequencia.ultimo + 1
                         RETURNING ultimo
                         """)
+                .param("academia", TenantContext.exigir())
                 .param("ano", ano.getValue())
                 .query(Integer.class)
                 .single();

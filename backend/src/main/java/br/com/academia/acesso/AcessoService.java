@@ -120,7 +120,7 @@ public class AcessoService {
         if (chave == null) {
             throw new RecursoNaoEncontradoException("Aluno não encontrado");
         }
-        return alunos.findByIdForUpdate(chave)
+        return alunos.findByMatriculaForUpdate(chave)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Aluno não encontrado"));
     }
 }

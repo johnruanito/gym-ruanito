@@ -14,7 +14,7 @@ const CAMPOS = ["nome", "matricula", "rg", "cpf", "celular", "situacao"] as cons
  */
 export function AlunosPage() {
   const [params, setParams] = useSearchParams();
-  const { isAdmin } = useAuth();
+  const { isAdmin, podeOperar } = useAuth();
   const excluir = useExcluirAluno();
 
   const filtro: FiltroAlunos = {
@@ -55,9 +55,11 @@ export function AlunosPage() {
         title="Alunos"
         subtitle="Pesquise por qualquer combinação de critérios"
         actions={
-          <Link to="/alunos/novo">
-            <Button>Novo aluno</Button>
-          </Link>
+          podeOperar && (
+            <Link to="/alunos/novo">
+              <Button>Novo aluno</Button>
+            </Link>
+          )
         }
       />
 
@@ -130,7 +132,7 @@ export function AlunosPage() {
                       </td>
                       <td className="py-2.5 text-right whitespace-nowrap">
                         <Link to={`/alunos/${a.matricula}`} className="text-sm font-medium text-zinc-700 hover:underline">
-                          Editar
+                          {podeOperar ? "Editar" : "Ver"}
                         </Link>
                         <Link
                           to={`/relatorios/acessos?matricula=${a.matricula}`}

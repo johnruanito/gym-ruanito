@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.TenantId;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -27,8 +28,12 @@ public class Acesso {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @TenantId
+    @Column(name = "academia_id", nullable = false, updatable = false)
+    private Long academiaId;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "aluno_matricula", nullable = false, updatable = false)
+    @JoinColumn(name = "aluno_id", nullable = false, updatable = false)
     private Aluno aluno;
 
     @Column(name = "entrada", nullable = false, updatable = false)

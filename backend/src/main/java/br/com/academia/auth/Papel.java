@@ -1,8 +1,13 @@
 package br.com.academia.auth;
 
+/**
+ * O que cada pessoa da equipe pode fazer. As regras ficam nos controllers via {@code @PreAuthorize}.
+ */
 public enum Papel {
-    /** Acesso total, inclusive exclusão de alunos e gestão de usuários. */
+    /** Dono/gestor: tudo, inclusive gerenciar a equipe e excluir alunos. */
     ADMIN,
-    /** Recepção: cadastro/edição de alunos, controle de acesso e relatórios. */
-    RECEPCAO
+    /** Recepção: cadastra e edita alunos, registra entrada/saída, vê relatórios. */
+    RECEPCAO,
+    /** Instrutor: só consulta (alunos, presentes, relatórios). Não altera cadastro nem catraca. */
+    INSTRUTOR
 }

@@ -1,5 +1,6 @@
 package br.com.academia.auth;
 
+import br.com.academia.shared.tenant.TenantContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -26,7 +27,7 @@ class AuthController {
     record LoginRequest(@NotBlank String username, @NotBlank String password) {
     }
 
-    record Me(String username, String nome, List<String> roles) {
+    record Me(String username, String nome, List<String> roles, Long academia) {
     }
 
     private final AuthService service;
@@ -43,7 +44,8 @@ class AuthController {
 
     @GetMapping("/me")
     Me me(@AuthenticationPrincipal Jwt jwt) {
-        return new Me(jwt.getSubject(), jwt.getClaimAsString("nome"), jwt.getClaimAsStringList("roles"));
+        return new Me(jwt.getSubject(), service.nomeDe(jwt.getSubject()), jwt.getClaimAsStringList("roles"),
+                jwt.<Number>getClaim(TenantContext.CLAIM).longValue());
     }
 
     @ExceptionHandler(BadCredentialsException.class)

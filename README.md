@@ -98,6 +98,7 @@ docker run -d --name academia-db -p 5432:5432 \
 
 # 2. API (porta 8080). O admin é criado no primeiro start.
 cd backend
+export JWT_SECRET=$(openssl rand -base64 48)   # obrigatório: não há valor padrão
 ACADEMIA_ADMIN_USERNAME=admin ACADEMIA_ADMIN_PASSWORD=admin12345 mvn spring-boot:run
 # Swagger: http://localhost:8080/swagger-ui.html
 
@@ -153,6 +154,18 @@ No perfil `prod` os logs saem em JSON (Elastic Common Schema), prontos para Loki
 | GET | `/api/acessos?matricula=&de=&ate=` | Relatório de entradas e saídas (padrão: últimos 30 dias) |
 | GET | `/api/acessos/presentes` | Quem está na academia agora |
 | GET | `/api/painel` | Totais por situação, presentes e entradas do dia |
+| GET/POST | `/api/usuarios` | Equipe da academia: listar e cadastrar (ADMIN) |
+| PUT | `/api/usuarios/{id}` | Alterar nome e papel (ADMIN) |
+| POST | `/api/usuarios/{id}/desativar` · `/reativar` · `/redefinir-senha` | Bloquear/liberar login e definir senha provisória (ADMIN) |
+| PUT | `/api/conta/senha` | Trocar a própria senha, confirmando a atual (todos) |
+
+### Papéis
+
+| Papel | Alunos | Catraca | Relatórios | Equipe |
+|---|---|---|---|---|
+| ADMIN (dono) | consulta, cadastra, edita, exclui | ✓ | ✓ | ✓ |
+| RECEPCAO | consulta, cadastra, edita | ✓ | ✓ | — |
+| INSTRUTOR | consulta | — | ✓ | — |
 | GET | `/api/estados` | UFs |
 
 ## Defeitos do sistema antigo corrigidos
@@ -163,7 +176,7 @@ No perfil `prod` os logs saem em JSON (Elastic Common Schema), prontos para Loki
 | 2 | CEP, RG e telefone como `Integer`: perdiam zeros à esquerda (CEP 01310-100) | Texto com `CHECK` de formato no banco |
 | 3 | Matrícula por `SELECT MAX()+1`: dois cadastros simultâneos geravam a mesma chave primária | Contador atômico por ano (`INSERT … ON CONFLICT … RETURNING`) |
 | 4 | `persistence.xml` com `drop-and-create`: o banco era apagado a cada deploy | Flyway com migrações versionadas; Hibernate só valida (`ddl-auto: validate`) |
-| 5 | Credenciais do banco no código, `transaction-type` inválido, provider Hibernate com libs EclipseLink | Configuração externa por variáveis de ambiente; o perfil `prod` exige `JWT_SECRET` |
+| 5 | Credenciais do banco no código, `transaction-type` inválido, provider Hibernate com libs EclipseLink | Configuração externa por variáveis de ambiente; `JWT_SECRET` obrigatório, sem valor padrão |
 | 6 | `Estado` com `@GeneratedValue` numa chave `String` | Sigla como chave natural, tabela carregada por migração |
 | 7 | Tela de login sem nenhuma autenticação real | JWT + BCrypt + papéis; admin inicial vindo de variável de ambiente |
 | 8 | Controle de acesso deixava entrar aluno INATIVO/PENDENTE | Entrada só para ATIVO (a saída continua sempre permitida) |
@@ -180,7 +193,7 @@ No perfil `prod` os logs saem em JSON (Elastic Common Schema), prontos para Loki
 | Variável | Padrão | Descrição |
 |---|---|---|
 | `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` | `localhost:5432/academia` | Conexão PostgreSQL |
-| `JWT_SECRET` | valor só para dev | Chave HMAC, mínimo 32 bytes (**obrigatória** no perfil `prod`) |
+| `JWT_SECRET` | — | Chave HMAC aleatória, mínimo 32 bytes. **Obrigatória em todos os ambientes**: quem a conhece emite token de qualquer academia |
 | `JWT_TTL` | `8h` | Validade da sessão (um turno) |
 | `ACADEMIA_ADMIN_USERNAME` / `_PASSWORD` | — | Admin criado no primeiro start, se a tabela de usuários estiver vazia |
 | `ACADEMIA_ZONE` | `America/Belem` | Fuso usado para "hoje" e para os períodos dos relatórios |

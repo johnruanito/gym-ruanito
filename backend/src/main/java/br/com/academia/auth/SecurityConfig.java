@@ -62,7 +62,8 @@ class SecurityConfig {
     SecretKey jwtKey(AcademiaProperties props) {
         byte[] bytes = props.jwt().secret().getBytes(StandardCharsets.UTF_8);
         if (bytes.length < 32) {
-            throw new IllegalStateException("academia.jwt.secret deve ter pelo menos 32 bytes (256 bits)");
+            throw new IllegalStateException(
+                    "JWT_SECRET deve ter pelo menos 32 bytes (256 bits). Gere com: openssl rand -base64 48");
         }
         return new SecretKeySpec(bytes, "HmacSHA256");
     }

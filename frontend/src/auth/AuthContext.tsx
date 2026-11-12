@@ -6,6 +6,8 @@ import type { Token } from "../api/types";
 interface AuthState {
   session: Token | null;
   isAdmin: boolean;
+  /** Pode alterar dados (cadastro de alunos, catraca). O instrutor só consulta. */
+  podeOperar: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
 }
@@ -26,12 +28,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (username: string, password: string) => {
     const token = await api<Token>("/auth/login", { method: "POST", body: { username, password } });
-    saveSession(token);
-    setSession(token);
+    const sessao = { ...token, username: username.trim().toLowerCase() };
+    saveSession(sessao);
+    setSession(sessao);
   }, []);
 
   const value = useMemo(
-    () => ({ session, isAdmin: session?.papel === "ADMIN", login, logout }),
+    () => ({
+      session,
+      isAdmin: session?.papel === "ADMIN",
+      podeOperar: session?.papel === "ADMIN" || session?.papel === "RECEPCAO",
+      login,
+      logout,
+    }),
     [session, login, logout],
   );
   return <AuthContext value={value}>{children}</AuthContext>;

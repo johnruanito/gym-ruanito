@@ -2,7 +2,13 @@
 
 export type Sexo = "MASCULINO" | "FEMININO";
 export type Situacao = "ATIVO" | "INATIVO" | "PENDENTE";
-export type Papel = "ADMIN" | "RECEPCAO";
+export type Papel = "ADMIN" | "RECEPCAO" | "INSTRUTOR";
+
+export const PAPEIS: { valor: Papel; rotulo: string; descricao: string }[] = [
+  { valor: "ADMIN", rotulo: "Administrador", descricao: "Tudo, inclusive gerenciar a equipe" },
+  { valor: "RECEPCAO", rotulo: "Recepção", descricao: "Cadastra alunos e registra entrada/saída" },
+  { valor: "INSTRUTOR", rotulo: "Instrutor", descricao: "Apenas consulta" },
+];
 export type TipoAcesso = "ENTRADA" | "SAIDA";
 
 export const SITUACOES: Situacao[] = ["ATIVO", "INATIVO", "PENDENTE"];
@@ -91,6 +97,10 @@ export interface Token {
   expiresAt: string;
   nome: string;
   papel: Papel;
+  /** Nome da academia do usuário (o sistema é multi-academia). */
+  academia: string;
+  /** Username digitado no login (guardado no cliente para identificar "você" na tela de equipe). */
+  username?: string;
 }
 
 /** RFC 9457 Problem Details, com `errors` por campo nas validações. */
@@ -99,4 +109,13 @@ export interface Problem {
   detail?: string;
   status: number;
   errors?: Record<string, string>;
+}
+
+export interface Usuario {
+  id: number;
+  username: string;
+  nome: string;
+  papel: Papel;
+  ativo: boolean;
+  criadoEm: string;
 }

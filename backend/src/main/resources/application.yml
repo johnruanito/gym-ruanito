@@ -18,6 +18,8 @@ spring:
       hibernate:
         jdbc:
           time_zone: UTC
+        # Multi-academia: o Hibernate pergunta a esta classe qual academia filtrar (ver TenantResolver)
+        tenant_identifier_resolver: br.com.academia.shared.tenant.TenantResolver
   flyway:
     locations: classpath:db/migration
   mvc:
@@ -35,7 +37,9 @@ academia:
   acesso:
     permanencia-maxima: ${ACADEMIA_PERMANENCIA_MAXIMA:12h}
   jwt:
-    secret: ${JWT_SECRET:dev-only-secret-change-me-0123456789abcdef}
+    # Sem valor padrão em nenhum ambiente: um segredo publicado no repositório permitiria forjar
+    # tokens de qualquer academia. Vazio → a validação de AcademiaProperties impede o start.
+    secret: ${JWT_SECRET:}
     ttl: ${JWT_TTL:8h}
     issuer: academia-api
   admin:
@@ -69,9 +73,6 @@ spring:
   config:
     activate:
       on-profile: prod
-academia:
-  jwt:
-    secret: ${JWT_SECRET}    # sem valor padrão em produção: falha no start se não definido
 logging:
   structured:
     format:
