@@ -91,6 +91,8 @@ export interface Token {
   expiresAt: string;
   nome: string;
   papel: Papel;
+  /** Nome da academia do usuário (o sistema é multi-academia). */
+  academia: string;
 }
 
 /** RFC 9457 Problem Details, com `errors` por campo nas validações. */

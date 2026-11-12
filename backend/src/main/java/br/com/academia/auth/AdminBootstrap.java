@@ -1,5 +1,6 @@
 package br.com.academia.auth;
 
+import br.com.academia.academia.AcademiaRepository;
 import br.com.academia.shared.config.AcademiaProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,11 +20,14 @@ class AdminBootstrap implements ApplicationRunner {
     private static final Logger log = LoggerFactory.getLogger(AdminBootstrap.class);
 
     private final UsuarioRepository usuarios;
+    private final AcademiaRepository academias;
     private final PasswordEncoder encoder;
     private final AcademiaProperties props;
 
-    AdminBootstrap(UsuarioRepository usuarios, PasswordEncoder encoder, AcademiaProperties props) {
+    AdminBootstrap(UsuarioRepository usuarios, AcademiaRepository academias, PasswordEncoder encoder,
+                   AcademiaProperties props) {
         this.usuarios = usuarios;
+        this.academias = academias;
         this.encoder = encoder;
         this.props = props;
     }
@@ -44,7 +48,10 @@ class AdminBootstrap implements ApplicationRunner {
             throw new IllegalStateException("A senha inicial do administrador deve ter pelo menos 8 caracteres");
         }
         String nome = isBlank(admin.nome()) ? "Administrador" : admin.nome();
-        usuarios.save(new Usuario(admin.username(), encoder.encode(admin.password()), nome, Papel.ADMIN));
+        // A migração V3 sempre cria a academia 1; o admin inicial é o dono dela.
+        var academia = academias.findFirstByOrderByIdAsc()
+                .orElseThrow(() -> new IllegalStateException("Nenhuma academia cadastrada"));
+        usuarios.save(new Usuario(academia.getId(), admin.username(), encoder.encode(admin.password()), nome, Papel.ADMIN));
         log.info("Usuário administrador '{}' criado.", admin.username());
     }
 
