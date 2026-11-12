@@ -1,5 +1,6 @@
 package br.com.academia.shared.config;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -15,8 +16,9 @@ import java.time.ZoneId;
 @ConfigurationProperties(prefix = "academia")
 public record AcademiaProperties(
         @NotNull ZoneId zone,
-        @NotNull Acesso acesso,
-        @NotNull Jwt jwt,
+        // @Valid: sem ele o Spring não valida as anotações DENTRO dos records aninhados
+        @NotNull @Valid Acesso acesso,
+        @NotNull @Valid Jwt jwt,
         Admin admin
 ) {
 
@@ -28,10 +30,11 @@ public record AcademiaProperties(
     }
 
     /**
-     * @param secret chave HMAC (mínimo 32 bytes) usada para assinar os tokens.
+     * @param secret chave HMAC (mínimo 32 bytes) usada para assinar os tokens. Vem SEMPRE da
+     *               variável de ambiente JWT_SECRET; quem a conhece consegue emitir token de qualquer academia.
      * @param ttl    validade do token de acesso.
      */
-    public record Jwt(@NotBlank String secret, @NotNull Duration ttl, @NotBlank String issuer) {
+    public record Jwt(@NotBlank(message = "defina a variável de ambiente JWT_SECRET") String secret, @NotNull Duration ttl, @NotBlank String issuer) {
     }
 
     /**

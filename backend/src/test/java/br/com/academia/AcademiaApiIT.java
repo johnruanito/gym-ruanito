@@ -62,6 +62,25 @@ class AcademiaApiIT {
                 .andExpect(status().isUnauthorized());
     }
 
+    /**
+     * O payload do JWT é só Base64 (qualquer um lê). Ele deve levar apenas o necessário para
+     * autorizar, sem dado pessoal. O nome continua disponível via /api/auth/me.
+     */
+    @Test
+    void tokenNaoCarregaDadosPessoais() throws Exception {
+        String payload = new String(java.util.Base64.getUrlDecoder().decode(token.split("\\.")[1]),
+                java.nio.charset.StandardCharsets.UTF_8);
+
+        org.assertj.core.api.Assertions.assertThat(payload)
+                .contains("\"sub\"", "\"roles\"", "\"academia\"")
+                .doesNotContain("\"nome\"", "Administrador");
+
+        mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nome").value("Administrador"))
+                .andExpect(jsonPath("$.academia").value(1));
+    }
+
     @Test
     void fluxoCompletoDeCadastroEControleDeAcesso() throws Exception {
         // cadastro com CPF que estourava o Integer no sistema antigo
