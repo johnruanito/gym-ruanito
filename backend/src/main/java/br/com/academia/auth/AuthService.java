@@ -49,6 +49,11 @@ public class AuthService {
         this.hashFicticio = encoder.encode(UUID.randomUUID().toString());
     }
 
+    /** Nome de exibição do usuário: buscado no banco, já que não viaja mais no token. */
+    public String nomeDe(String username) {
+        return usuarios.findByUsernameIgnoreCase(username).map(Usuario::getNome).orElse(username);
+    }
+
     public Token autenticar(String username, String senha) {
         var usuario = usuarios.findByUsernameIgnoreCase(username.strip()).filter(Usuario::isAtivo);
         boolean senhaOk = encoder.matches(senha, usuario.map(Usuario::getSenhaHash).orElse(hashFicticio));
@@ -61,6 +66,11 @@ public class AuthService {
         return emitir(usuario.get(), academia.getNome());
     }
 
+    /**
+     * O payload do JWT é só Base64, legível por qualquer um que capture o token (logs de proxy,
+     * ferramentas de monitoramento). Por isso ele leva apenas o necessário para autorizar:
+     * quem é (sub), o que pode (roles) e de qual academia (academia). Nada de nome, CPF ou e-mail.
+     */
     private Token emitir(Usuario u, String nomeAcademia) {
         Instant agora = clock.instant();
         Instant expira = agora.plus(jwtProps.ttl());
@@ -69,7 +79,6 @@ public class AuthService {
                 .subject(u.getUsername())
                 .issuedAt(agora)
                 .expiresAt(expira)
-                .claim("nome", u.getNome())
                 .claim("roles", List.of(u.getPapel().name()))
                 // Daqui em diante, tudo o que este usuário fizer fica restrito a esta academia
                 .claim(TenantContext.CLAIM, u.getAcademiaId())
