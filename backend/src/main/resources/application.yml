@@ -40,8 +40,12 @@ academia:
     # Sem valor padrão em nenhum ambiente: um segredo publicado no repositório permitiria forjar
     # tokens de qualquer academia. Vazio → a validação de AcademiaProperties impede o start.
     secret: ${JWT_SECRET:}
-    ttl: ${JWT_TTL:8h}
+    ttl: ${JWT_TTL:15m}        # access token curto: o refresh renova sem pedir senha
     issuer: academia-api
+  sessao:
+    duracao: ${ACADEMIA_SESSAO_DURACAO:12h}
+    cookie-seguro: ${ACADEMIA_COOKIE_SEGURO:true}
+    tolerancia-reuso: 10s
   admin:
     username: ${ACADEMIA_ADMIN_USERNAME:}
     password: ${ACADEMIA_ADMIN_PASSWORD:}

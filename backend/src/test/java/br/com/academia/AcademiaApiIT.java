@@ -41,12 +41,12 @@ class AcademiaApiIT {
     @BeforeEach
     void setUp() throws Exception {
         mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
-        String body = mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+        // O token vem em cookie HttpOnly; nos testes o usamos como Bearer (o resolver aceita os dois)
+        token = mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"username":"admin","password":"senha-forte-123"}"""))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-        token = JsonPath.read(body, "$.accessToken");
+                .andReturn().getResponse().getCookie("access_token").getValue();
     }
 
     @Test
@@ -78,7 +78,7 @@ class AcademiaApiIT {
         mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nome").value("Administrador"))
-                .andExpect(jsonPath("$.academia").value(1));
+                .andExpect(jsonPath("$.academia").value("Academia Principal"));
     }
 
     @Test

@@ -206,7 +206,7 @@ export function UsuariosPage() {
                 </tbody>
               </table>
               <p className="mt-3 text-xs text-zinc-500">
-                Desativar bloqueia novos logins. Quem já está logado perde o acesso quando a sessão expirar.
+                Desativar encerra as sessões da pessoa: ela perde o acesso em até 15 minutos.
               </p>
             </div>
           ) : (

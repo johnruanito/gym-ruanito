@@ -52,5 +52,7 @@ test("troca da própria senha confere a confirmação e a senha atual", async ({
 
   await page.getByLabel("Confirme a nova senha").fill("NovaSenha#2026");
   await page.getByRole("button", { name: "Alterar senha" }).click();
+  // Trocar a senha encerra todas as sessões: volta ao login com aviso
+  await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByText("Senha alterada")).toBeVisible();
 });

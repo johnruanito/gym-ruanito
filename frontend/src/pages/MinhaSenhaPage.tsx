@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from "react";
 import { useTrocarMinhaSenha } from "../api/hooks";
+import { useAuth } from "../auth/AuthContext";
 import { Alert, Button, Card, Field, Input, PageHeader } from "../components/ui";
 
 /** Qualquer usuário troca a própria senha. A senha atual é exigida: um computador destravado não basta. */
 export function MinhaSenhaPage() {
   const trocar = useTrocarMinhaSenha();
+  const { encerrarLocalmente } = useAuth();
   const [erroLocal, setErroLocal] = useState<string | null>(null);
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -18,16 +20,28 @@ export function MinhaSenhaPage() {
       setErroLocal("A confirmação não confere com a nova senha.");
       return;
     }
-    trocar.mutate({ senhaAtual, novaSenha }, { onSuccess: () => form.reset() });
+    // Trocar a senha encerra TODAS as sessões no servidor (inclusive esta): volta ao login
+    trocar.mutate(
+      { senhaAtual, novaSenha },
+      {
+        onSuccess: () => {
+          form.reset();
+          // Sem sessão, a rota protegida já redireciona para o login, que exibe o aviso
+          encerrarLocalmente("Senha alterada. Entre novamente com a nova senha.");
+        },
+      },
+    );
   }
 
   return (
     <div className="mx-auto max-w-md">
-      <PageHeader title="Minha senha" subtitle="Mínimo de 8 caracteres, sem conter o seu usuário" />
+      <PageHeader
+        title="Minha senha"
+        subtitle="Mínimo de 8 caracteres, sem conter o seu usuário. Depois da troca, todas as suas sessões são encerradas."
+      />
       <Card>
         <form onSubmit={onSubmit} className="space-y-4">
           {(erroLocal || trocar.error) && <Alert>{erroLocal ?? trocar.error?.message}</Alert>}
-          {trocar.isSuccess && <Alert tone="success">Senha alterada. Use a nova senha no próximo login.</Alert>}
           <Field label="Senha atual">
             <Input name="senhaAtual" type="password" autoComplete="current-password" required />
           </Field>

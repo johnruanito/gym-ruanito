@@ -199,9 +199,8 @@ class UsuarioIT {
     }
 
     private String login(String username, String senha) throws Exception {
-        String body = loginStatus(username, senha).andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-        return JsonPath.read(body, "$.accessToken");
+        return loginStatus(username, senha).andExpect(status().isOk())
+                .andReturn().getResponse().getCookie("access_token").getValue();
     }
 
     private static String novoUsername(String prefixo) {
