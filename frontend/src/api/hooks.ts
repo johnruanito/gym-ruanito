@@ -9,7 +9,9 @@ import type {
   Page,
   Painel,
   RegistroAcesso,
+  Papel,
   Situacao,
+  Usuario,
 } from "./types";
 
 export interface FiltroAlunos {
@@ -113,5 +115,52 @@ export function usePainel() {
     queryKey: ["painel"],
     queryFn: () => api<Painel>("/painel"),
     refetchInterval: 30_000,
+  });
+}
+
+// ------------------------------------------------------------------ equipe
+
+export function useUsuarios() {
+  return useQuery({ queryKey: ["usuarios"], queryFn: () => api<Usuario[]>("/usuarios") });
+}
+
+export function useCriarUsuario() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { username: string; nome: string; papel: Papel; senha: string }) =>
+      api<Usuario>("/usuarios", { method: "POST", body }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["usuarios"] }),
+  });
+}
+
+export function useAtualizarUsuario() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id: number; nome: string; papel: Papel }) =>
+      api<Usuario>(`/usuarios/${id}`, { method: "PUT", body }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["usuarios"] }),
+  });
+}
+
+export function useAlterarStatusUsuario() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ativo }: { id: number; ativo: boolean }) =>
+      api<Usuario>(`/usuarios/${id}/${ativo ? "reativar" : "desativar"}`, { method: "POST" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["usuarios"] }),
+  });
+}
+
+export function useRedefinirSenha() {
+  return useMutation({
+    mutationFn: ({ id, novaSenha }: { id: number; novaSenha: string }) =>
+      api<void>(`/usuarios/${id}/redefinir-senha`, { method: "POST", body: { novaSenha } }),
+  });
+}
+
+export function useTrocarMinhaSenha() {
+  return useMutation({
+    mutationFn: (body: { senhaAtual: string; novaSenha: string }) =>
+      api<void>("/conta/senha", { method: "PUT", body }),
   });
 }

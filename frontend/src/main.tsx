@@ -18,6 +18,8 @@ const ControleAcessoPage = page(() => import("./pages/ControleAcessoPage"), "Con
 const AlunosPage = page(() => import("./pages/AlunosPage"), "AlunosPage");
 const AlunoFormPage = page(() => import("./pages/AlunoFormPage"), "AlunoFormPage");
 const RelatorioAcessosPage = page(() => import("./pages/RelatorioAcessosPage"), "RelatorioAcessosPage");
+const UsuariosPage = page(() => import("./pages/UsuariosPage"), "UsuariosPage");
+const MinhaSenhaPage = page(() => import("./pages/MinhaSenhaPage"), "MinhaSenhaPage");
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,6 +52,8 @@ const router = createBrowserRouter([
       { path: "alunos/novo", element: <AlunoFormPage /> },
       { path: "alunos/:matricula", element: <AlunoFormPage /> },
       { path: "relatorios/acessos", element: <RelatorioAcessosPage /> },
+      { path: "equipe", element: <UsuariosPage /> },
+      { path: "minha-senha", element: <MinhaSenhaPage /> },
       { path: "*", element: <Navigate to="/" replace /> },
     ],
   },

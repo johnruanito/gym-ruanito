@@ -6,6 +6,7 @@ import { Link, useNavigate, useParams } from "react-router";
 import { ApiError } from "../api/client";
 import { useAluno, useEstados, useSalvarAluno } from "../api/hooks";
 import { SITUACOES, type Aluno, type AlunoRequest } from "../api/types";
+import { useAuth } from "../auth/AuthContext";
 import { Alert, Button, Card, Field, Input, PageHeader, Select } from "../components/ui";
 import { cpfValido } from "../lib/cpf";
 import { fmtDataHora } from "../lib/format";
@@ -67,6 +68,7 @@ export function AlunoFormPage() {
   const aluno = useAluno(matricula);
   const estados = useEstados();
   const salvar = useSalvarAluno(matricula);
+  const { podeOperar } = useAuth();
   const [salvo, setSalvo] = useState(false);
 
   const {
@@ -151,14 +153,17 @@ export function AlunoFormPage() {
                 </Button>
               </Link>
             )}
-            <Button type="submit" disabled={salvar.isPending || (editando && !isDirty)}>
-              {salvar.isPending ? "Salvando…" : "Salvar"}
-            </Button>
+            {podeOperar && (
+              <Button type="submit" disabled={salvar.isPending || (editando && !isDirty)}>
+                {salvar.isPending ? "Salvando…" : "Salvar"}
+              </Button>
+            )}
           </div>
         }
       />
 
-      <div className="space-y-4">
+      {/* fieldset disabled: trava todos os campos de uma vez para quem só pode consultar */}
+      <fieldset disabled={!podeOperar} className="space-y-4">
         {salvar.error && <Alert>{salvar.error.message}</Alert>}
         {salvo && !salvar.error && <Alert tone="success">Dados gravados com sucesso.</Alert>}
 
@@ -244,7 +249,7 @@ export function AlunoFormPage() {
             </Field>
           </div>
         </Card>
-      </div>
+      </fieldset>
     </form>
   );
 }
