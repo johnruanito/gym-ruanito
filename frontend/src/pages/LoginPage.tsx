@@ -6,13 +6,14 @@ import { Logo } from "../components/Layout";
 import { Alert, Button, Field, Input } from "../components/ui";
 
 export function LoginPage() {
-  const { session, login } = useAuth();
+  const { session, login, aviso } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
   const destino = (location.state as { from?: string } | null)?.from ?? "/";
+  if (session === undefined) return null; // ainda verificando se já existe sessão
   if (session) return <Navigate to={destino} replace />;
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -39,6 +40,7 @@ export function LoginPage() {
             <h1 className="text-lg font-semibold text-zinc-900">Entrar</h1>
             <p className="text-sm text-zinc-500">Acesso da equipe da recepção</p>
           </div>
+          {aviso && !erro && <Alert tone="info">{aviso}</Alert>}
           {erro && <Alert>{erro}</Alert>}
           <Field label="Usuário">
             <Input name="username" autoComplete="username" required autoFocus />

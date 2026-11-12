@@ -26,6 +26,7 @@ services:
       ACADEMIA_ADMIN_USERNAME: ${ACADEMIA_ADMIN_USERNAME:-admin}
       ACADEMIA_ADMIN_PASSWORD: ${ACADEMIA_ADMIN_PASSWORD:-}
       ACADEMIA_ZONE: ${ACADEMIA_ZONE:-America/Belem}
+      ACADEMIA_COOKIE_SEGURO: ${ACADEMIA_COOKIE_SEGURO:-true}
     depends_on:
       db:
         condition: service_healthy

@@ -92,15 +92,19 @@ export interface Painel {
   entradasHoje: number;
 }
 
-export interface Token {
-  accessToken: string;
-  expiresAt: string;
+/** Quem está logado. Sem token: a sessão fica em cookies HttpOnly, fora do alcance do JavaScript. */
+export interface Perfil {
+  username: string;
   nome: string;
   papel: Papel;
   /** Nome da academia do usuário (o sistema é multi-academia). */
   academia: string;
-  /** Username digitado no login (guardado no cliente para identificar "você" na tela de equipe). */
-  username?: string;
+}
+
+export interface SessaoResponse {
+  perfil: Perfil;
+  accessExpiraEm: string;
+  sessaoExpiraEm: string;
 }
 
 /** RFC 9457 Problem Details, com `errors` por campo nas validações. */

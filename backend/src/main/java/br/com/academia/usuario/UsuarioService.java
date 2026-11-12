@@ -3,6 +3,7 @@ package br.com.academia.usuario;
 import br.com.academia.auth.Papel;
 import br.com.academia.auth.Usuario;
 import br.com.academia.auth.UsuarioRepository;
+import br.com.academia.auth.sessao.SessaoService;
 import br.com.academia.shared.error.ConflitoException;
 import br.com.academia.shared.error.RecursoNaoEncontradoException;
 import br.com.academia.shared.error.RegraNegocioException;
@@ -30,10 +31,12 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarios;
     private final PasswordEncoder encoder;
+    private final SessaoService sessoes;
 
-    UsuarioService(UsuarioRepository usuarios, PasswordEncoder encoder) {
+    UsuarioService(UsuarioRepository usuarios, PasswordEncoder encoder, SessaoService sessoes) {
         this.usuarios = usuarios;
         this.encoder = encoder;
+        this.sessoes = sessoes;
     }
 
     public List<Usuario> listar() {
@@ -78,6 +81,8 @@ public class UsuarioService {
             garantirOutroAdminAtivo(usuario, "desativar");
         }
         usuario.desativar();
+        // Derruba as sessões: a próxima renovação falha e o acesso acaba em no máximo 15 min (access token)
+        sessoes.revogarTodas(usuario.getId());
         return usuario;
     }
 
@@ -94,6 +99,7 @@ public class UsuarioService {
         Usuario usuario = buscar(id);
         SenhaPolicy.validar(novaSenha, usuario.getUsername());
         usuario.trocarSenha(encoder.encode(novaSenha));
+        sessoes.revogarTodas(usuario.getId()); // quem estava logado com a senha antiga é desconectado
     }
 
     /** Qualquer usuário troca a própria senha, confirmando a atual. */
@@ -109,6 +115,8 @@ public class UsuarioService {
         }
         SenhaPolicy.validar(novaSenha, username);
         usuario.trocarSenha(encoder.encode(novaSenha));
+        // Senha trocada = possível suspeita de vazamento: encerra TODAS as sessões, inclusive esta
+        sessoes.revogarTodas(usuario.getId());
     }
 
     /** Impede que a academia fique sem nenhum administrador ativo (ninguém mais conseguiria gerir a equipe). */

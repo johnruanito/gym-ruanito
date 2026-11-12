@@ -143,8 +143,10 @@ No perfil `prod` os logs saem em JSON (Elastic Common Schema), prontos para Loki
 
 | Método | Rota | Descrição |
 |---|---|---|
-| POST | `/api/auth/login` | Autentica; retorna JWT |
-| GET | `/api/auth/me` | Usuário do token |
+| POST | `/api/auth/login` | Autentica e grava a sessão em cookies `HttpOnly` (o corpo não tem token) |
+| POST | `/api/auth/refresh` | Troca o refresh token (cookie) por um novo par, com rotação |
+| POST | `/api/auth/logout` | Revoga a sessão no servidor e apaga os cookies |
+| GET | `/api/auth/me` | Perfil de quem está logado |
 | GET | `/api/alunos?nome=&matricula=&rg=&cpf=&celular=&situacao=&page=&size=` | Pesquisa paginada (também substitui o antigo "relatório de situações") |
 | GET | `/api/alunos/{matricula}` | Detalhe |
 | POST | `/api/alunos` | Cadastro: matrícula gerada no servidor |
@@ -194,7 +196,9 @@ No perfil `prod` os logs saem em JSON (Elastic Common Schema), prontos para Loki
 |---|---|---|
 | `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` | `localhost:5432/academia` | Conexão PostgreSQL |
 | `JWT_SECRET` | — | Chave HMAC aleatória, mínimo 32 bytes. **Obrigatória em todos os ambientes**: quem a conhece emite token de qualquer academia |
-| `JWT_TTL` | `8h` | Validade da sessão (um turno) |
+| `JWT_TTL` | `15m` | Validade do access token (renovado automaticamente pelo refresh) |
+| `ACADEMIA_SESSAO_DURACAO` | `12h` | Duração máxima da sessão desde o login; renovar não estende |
+| `ACADEMIA_COOKIE_SEGURO` | `true` | Cookies só em HTTPS. `false` apenas para teste por IP sem TLS |
 | `ACADEMIA_ADMIN_USERNAME` / `_PASSWORD` | — | Admin criado no primeiro start, se a tabela de usuários estiver vazia |
 | `ACADEMIA_ZONE` | `America/Belem` | Fuso usado para "hoje" e para os períodos dos relatórios |
 | `ACADEMIA_PERMANENCIA_MAXIMA` | `12h` | Tempo após o qual uma entrada sem saída é considerada abandonada |
@@ -202,11 +206,11 @@ No perfil `prod` os logs saem em JSON (Elastic Common Schema), prontos para Loki
 ## Roadmap
 
 **Segurança e LGPD** (ver [ADR 0003](docs/adr/0003-jwt-stateless.md))
-- [ ] Sessão em cookie `HttpOnly` + refresh token rotativo com revogação no logout
+- [x] Sessão em cookie `HttpOnly` + refresh token rotativo com revogação no logout ([ADR 0006](docs/adr/0006-sessao-cookies-refresh-rotativo.md))
 - [ ] Rate limiting no login (Bucket4j)
 - [ ] Auditoria de alterações em dados pessoais (Hibernate Envers: quem, quando, o quê)
 - [ ] CPF mascarado nas respostas para o papel RECEPCAO; consentimento LGPD no cadastro
-- [ ] Gestão de usuários (CRUD, troca de senha, desativação)
+- [x] Gestão de usuários (CRUD, troca de senha, desativação)
 
 **Qualidade**
 - [ ] Testes de arquitetura das fronteiras entre módulos (Spring Modulith)

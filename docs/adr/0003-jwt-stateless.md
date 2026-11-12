@@ -1,6 +1,6 @@
 # 0003 — JWT stateless emitido pela própria API
 
-**Status:** aceito, com revisão planejada
+**Status:** aceito. Limitações de armazenamento e revogação resolvidas pelo [ADR 0006](0006-sessao-cookies-refresh-rotativo.md)
 
 ## Contexto
 O legado tinha uma tela de login sem nenhum mecanismo de autenticação por trás. Precisamos de

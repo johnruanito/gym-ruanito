@@ -28,7 +28,9 @@ class JwtSecretObrigatorioTest {
                     "academia.zone=America/Belem",
                     "academia.acesso.permanencia-maxima=12h",
                     "academia.jwt.ttl=8h",
-                    "academia.jwt.issuer=academia-api");
+                    "academia.jwt.issuer=academia-api",
+                    "academia.sessao.duracao=12h",
+                    "academia.sessao.tolerancia-reuso=0s");
 
     @Test
     void naoSobeSemSegredo() {

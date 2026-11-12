@@ -10,6 +10,12 @@ export interface MockState {
   acessos: { id: number; matricula: string; nome: string; entrada: string; saida: string | null; duracaoMinutos: number | null }[];
   seq: number;
   usuarios: { id: number; username: string; nome: string; papel: string; ativo: boolean; criadoEm: string; senha: string }[];
+  /**
+   * Simula os cookies HttpOnly: o mock guarda quem está logado (o navegador não vê token nenhum).
+   * accessValido=false simula o access token de 15 min vencido; refreshValido=false, a sessão encerrada.
+   */
+  sessao: { username: string; accessValido: boolean; refreshValido: boolean } | null;
+  renovacoes: number;
 }
 
 const json = (route: Route, status: number, body?: unknown) =>
@@ -45,6 +51,8 @@ export async function mockApi(page: Page, seed: Partial<MockState> = {}): Promis
       { id: 1, username: "admin", nome: "Dona Ana", papel: "ADMIN", ativo: true, criadoEm: new Date().toISOString(), senha: "senha-correta" },
       { id: 2, username: "instrutor", nome: "Iago Instrutor", papel: "INSTRUTOR", ativo: true, criadoEm: new Date().toISOString(), senha: "senha-correta" },
     ],
+    sessao: null,
+    renovacoes: 0,
     ...seed,
   };
   const semSenha = (u: MockState["usuarios"][number]) => {
@@ -63,16 +71,37 @@ export async function mockApi(page: Page, seed: Partial<MockState> = {}): Promis
     const method = req.method();
     const body = req.postDataJSON?.() as Record<string, unknown> | undefined;
 
+    const perfil = (username: string) => {
+      const u = state.usuarios.find((x) => x.username === username)!;
+      return { username: u.username, nome: u.nome, papel: u.papel, academia: "Academia Teste" };
+    };
+    const respostaSessao = (username: string) => ({
+      perfil: perfil(username),
+      accessExpiraEm: new Date(Date.now() + 9e5).toISOString(),
+      sessaoExpiraEm: new Date(Date.now() + 4.32e7).toISOString(),
+    });
+
     if (method === "POST" && path === "/auth/login") {
       const u = state.usuarios.find((x) => x.username === body?.username && x.ativo && x.senha === body?.password);
-      return u
-        ? json(route, 200, { accessToken: u.papel, expiresAt: new Date(Date.now() + 3.6e6).toISOString(), nome: u.nome, papel: u.papel, academia: "Academia Teste" })
-        : problem(route, 401, "Usuário ou senha inválidos");
+      if (!u) return problem(route, 401, "Usuário ou senha inválidos");
+      state.sessao = { username: u.username, accessValido: true, refreshValido: true };
+      return json(route, 200, respostaSessao(u.username));
     }
-    if (!req.headers()["authorization"]) return problem(route, 401, "Não autenticado");
+    if (method === "POST" && path === "/auth/refresh") {
+      if (!state.sessao?.refreshValido) return problem(route, 401, "Sessão expirada");
+      state.renovacoes++;
+      state.sessao.accessValido = true;
+      return json(route, 200, respostaSessao(state.sessao.username));
+    }
+    if (method === "POST" && path === "/auth/logout") {
+      state.sessao = null;
+      return route.fulfill({ status: 204 });
+    }
+    if (!state.sessao?.accessValido) return problem(route, 401, "Não autenticado");
+    if (path === "/auth/me") return json(route, 200, perfil(state.sessao.username));
 
-    // O "token" do mock é o próprio papel: permite simular o 403 do backend
-    const papel = req.headers()["authorization"]!.replace("Bearer ", "");
+    // Papel de quem está logado: permite simular o 403 do backend
+    const papel = perfil(state.sessao.username).papel;
 
     if (path === "/usuarios" || path.startsWith("/usuarios/")) {
       if (papel !== "ADMIN") return problem(route, 403, "Acesso negado");

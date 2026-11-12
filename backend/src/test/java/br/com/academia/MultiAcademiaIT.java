@@ -90,7 +90,7 @@ class MultiAcademiaIT {
         mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"admin\",\"password\":\"senha-forte-123\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.academia").value("Academia Principal"));
+                .andExpect(jsonPath("$.perfil.academia").value("Academia Principal"));
     }
 
     /** Cria academia + usuário direto no banco (ainda não há API de cadastro de academia). */
@@ -109,11 +109,10 @@ class MultiAcademiaIT {
     }
 
     private String login(String username, String senha) throws Exception {
-        String body = mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+        return mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"%s\",\"password\":\"%s\"}".formatted(username, senha)))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-        return JsonPath.read(body, "$.accessToken");
+                .andReturn().getResponse().getCookie("access_token").getValue();
     }
 
     private static String aluno(String nome, String cpf, String rg) {

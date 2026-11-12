@@ -34,6 +34,7 @@ const queryClient = new QueryClient({
 function RequireAuth({ children }: { children: ReactNode }) {
   const { session } = useAuth();
   const location = useLocation();
+  if (session === undefined) return <p className="p-8 text-sm text-zinc-500">Carregando…</p>;
   return session ? children : <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
 }
 

@@ -36,10 +36,11 @@ class SecurityConfig {
     @Bean
     SecurityFilterChain api(HttpSecurity http) throws Exception {
         return http
-                .csrf(AbstractHttpConfigurer::disable) // sem cookies de sessão: CSRF não se aplica
+                .csrf(AbstractHttpConfigurer::disable) // CSRF coberto por SameSite=Strict nos cookies (ver SessaoCookies)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        // login/refresh/logout se autenticam pelo refresh token (cookie), não pelo access token
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
                         .requestMatchers("/error").permitAll()
                         // Prometheus coleta sem token. A porta 8080 não é publicada no compose e o nginx
                         // só encaminha /api/, então o actuator fica acessível apenas na rede interna.
@@ -48,7 +49,9 @@ class SecurityConfig {
                         .requestMatchers("/actuator/**").hasRole("ADMIN")
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().denyAll())
-                .oauth2ResourceServer(o -> o.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
+                .oauth2ResourceServer(o -> o
+                        .bearerTokenResolver(new CookieOuHeaderTokenResolver())
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
                 .build();
     }
 
