@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -42,6 +43,7 @@ class AcessoController {
     }
 
     @Operation(summary = "Registra entrada ou saída (alterna automaticamente) por matrícula ou RG")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPCAO')")
     @PostMapping
     AcessoService.Registro registrar(@RequestBody RegistroRequest request) {
         return service.registrar(request.matricula(), request.rg());

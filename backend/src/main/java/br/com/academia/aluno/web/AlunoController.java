@@ -55,6 +55,8 @@ class AlunoController {
         return AlunoResponse.of(service.buscar(matricula));
     }
 
+    /** Escrita: dono e recepção. O instrutor só consulta. */
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPCAO')")
     @PostMapping
     ResponseEntity<AlunoResponse> cadastrar(@Valid @RequestBody AlunoRequest request) {
         var aluno = service.cadastrar(request.toDados());
@@ -63,6 +65,7 @@ class AlunoController {
         return ResponseEntity.created(location).body(AlunoResponse.of(aluno));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPCAO')")
     @PutMapping("/{matricula}")
     AlunoResponse atualizar(@PathVariable String matricula, @Valid @RequestBody AlunoRequest request) {
         return AlunoResponse.of(service.atualizar(matricula, request.toDados(), request.versao()));

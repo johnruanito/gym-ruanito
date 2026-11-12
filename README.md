@@ -153,6 +153,18 @@ No perfil `prod` os logs saem em JSON (Elastic Common Schema), prontos para Loki
 | GET | `/api/acessos?matricula=&de=&ate=` | Relatório de entradas e saídas (padrão: últimos 30 dias) |
 | GET | `/api/acessos/presentes` | Quem está na academia agora |
 | GET | `/api/painel` | Totais por situação, presentes e entradas do dia |
+| GET/POST | `/api/usuarios` | Equipe da academia: listar e cadastrar (ADMIN) |
+| PUT | `/api/usuarios/{id}` | Alterar nome e papel (ADMIN) |
+| POST | `/api/usuarios/{id}/desativar` · `/reativar` · `/redefinir-senha` | Bloquear/liberar login e definir senha provisória (ADMIN) |
+| PUT | `/api/conta/senha` | Trocar a própria senha, confirmando a atual (todos) |
+
+### Papéis
+
+| Papel | Alunos | Catraca | Relatórios | Equipe |
+|---|---|---|---|---|
+| ADMIN (dono) | consulta, cadastra, edita, exclui | ✓ | ✓ | ✓ |
+| RECEPCAO | consulta, cadastra, edita | ✓ | ✓ | — |
+| INSTRUTOR | consulta | — | ✓ | — |
 | GET | `/api/estados` | UFs |
 
 ## Defeitos do sistema antigo corrigidos

@@ -2,11 +2,14 @@ import { Suspense } from "react";
 import { NavLink, Outlet } from "react-router";
 import { useAuth } from "../auth/AuthContext";
 
-const links = [
-  { to: "/", label: "Painel", end: true },
-  { to: "/acesso", label: "Controle de acesso" },
-  { to: "/alunos", label: "Alunos" },
-  { to: "/relatorios/acessos", label: "Entradas e saídas" },
+type Permissao = "todos" | "operar" | "admin";
+
+const links: { to: string; label: string; end?: boolean; permissao: Permissao }[] = [
+  { to: "/", label: "Painel", end: true, permissao: "todos" },
+  { to: "/acesso", label: "Controle de acesso", permissao: "operar" },
+  { to: "/alunos", label: "Alunos", permissao: "todos" },
+  { to: "/relatorios/acessos", label: "Entradas e saídas", permissao: "todos" },
+  { to: "/equipe", label: "Equipe", permissao: "admin" },
 ];
 
 export function Logo({ className = "" }: { className?: string }) {
@@ -28,14 +31,18 @@ export function Logo({ className = "" }: { className?: string }) {
 }
 
 export function Layout() {
-  const { session, logout } = useAuth();
+  const { session, logout, isAdmin, podeOperar } = useAuth();
+  // Esconder o menu é só conforto visual: quem protege de verdade é o backend (403).
+  const visiveis = links.filter(
+    (l) => l.permissao === "todos" || (l.permissao === "operar" && podeOperar) || (l.permissao === "admin" && isAdmin),
+  );
   return (
     <div className="min-h-dvh bg-zinc-50">
       <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4">
           <Logo className="text-zinc-900" />
           <nav className="flex flex-1 gap-1 overflow-x-auto">
-            {links.map((l) => (
+            {visiveis.map((l) => (
               <NavLink
                 key={l.to}
                 to={l.to}
@@ -55,6 +62,9 @@ export function Layout() {
               <span className="block text-zinc-900">{session?.academia}</span>
               <span className="block text-xs text-zinc-500">{session?.nome}</span>
             </span>
+            <NavLink to="/minha-senha" className="text-zinc-600 hover:text-zinc-900">
+              Minha senha
+            </NavLink>
             <button onClick={logout} className="text-zinc-600 hover:text-zinc-900">
               Sair
             </button>
