@@ -9,6 +9,7 @@ export interface MockState {
   alunos: Record<string, Record<string, unknown>>;
   acessos: { id: number; matricula: string; nome: string; entrada: string; saida: string | null; duracaoMinutos: number | null }[];
   seq: number;
+  usuarios: { id: number; username: string; nome: string; papel: string; ativo: boolean; criadoEm: string; senha: string }[];
 }
 
 const json = (route: Route, status: number, body?: unknown) =>
@@ -36,7 +37,21 @@ export function alunoBase(over: Record<string, unknown> = {}) {
 }
 
 export async function mockApi(page: Page, seed: Partial<MockState> = {}): Promise<MockState> {
-  const state: MockState = { alunos: {}, acessos: [], seq: 0, ...seed };
+  const state: MockState = {
+    alunos: {},
+    acessos: [],
+    seq: 0,
+    usuarios: [
+      { id: 1, username: "admin", nome: "Dona Ana", papel: "ADMIN", ativo: true, criadoEm: new Date().toISOString(), senha: "senha-correta" },
+      { id: 2, username: "instrutor", nome: "Iago Instrutor", papel: "INSTRUTOR", ativo: true, criadoEm: new Date().toISOString(), senha: "senha-correta" },
+    ],
+    ...seed,
+  };
+  const semSenha = (u: MockState["usuarios"][number]) => {
+    const copia: Partial<MockState["usuarios"][number]> = { ...u };
+    delete copia.senha;
+    return copia;
+  };
 
   // ViaCEP fora do ar nos testes: o formulário precisa continuar funcionando
   await page.route("https://viacep.com.br/**", (r) => r.abort());
@@ -49,11 +64,38 @@ export async function mockApi(page: Page, seed: Partial<MockState> = {}): Promis
     const body = req.postDataJSON?.() as Record<string, unknown> | undefined;
 
     if (method === "POST" && path === "/auth/login") {
-      return body?.password === "senha-correta"
-        ? json(route, 200, { accessToken: "t", expiresAt: new Date(Date.now() + 3.6e6).toISOString(), nome: "Recepção", papel: "ADMIN", academia: "Academia Teste" })
+      const u = state.usuarios.find((x) => x.username === body?.username && x.ativo && x.senha === body?.password);
+      return u
+        ? json(route, 200, { accessToken: u.papel, expiresAt: new Date(Date.now() + 3.6e6).toISOString(), nome: u.nome, papel: u.papel, academia: "Academia Teste" })
         : problem(route, 401, "Usuário ou senha inválidos");
     }
     if (!req.headers()["authorization"]) return problem(route, 401, "Não autenticado");
+
+    // O "token" do mock é o próprio papel: permite simular o 403 do backend
+    const papel = req.headers()["authorization"]!.replace("Bearer ", "");
+
+    if (path === "/usuarios" || path.startsWith("/usuarios/")) {
+      if (papel !== "ADMIN") return problem(route, 403, "Acesso negado");
+      if (method === "GET") return json(route, 200, state.usuarios.map(semSenha));
+      if (method === "POST" && path === "/usuarios") {
+        if (state.usuarios.some((u) => u.username === body?.username)) return problem(route, 409, "Nome de usuário já está em uso");
+        const novo = { id: state.usuarios.length + 1, ativo: true, criadoEm: new Date().toISOString(), username: String(body?.username), nome: String(body?.nome), papel: String(body?.papel), senha: String(body?.senha) };
+        state.usuarios.push(novo);
+        return json(route, 201, semSenha(novo));
+      }
+      const m = path.match(/^\/usuarios\/(\d+)\/(desativar|reativar)$/);
+      if (m) {
+        const u = state.usuarios.find((x) => x.id === Number(m[1]))!;
+        u.ativo = m[2] === "reativar";
+        return json(route, 200, semSenha(u));
+      }
+    }
+
+    if (path === "/conta/senha" && method === "PUT") {
+      return body?.senhaAtual === "senha-correta"
+        ? route.fulfill({ status: 204 })
+        : problem(route, 422, "Senha atual incorreta");
+    }
 
     if (path === "/estados") return json(route, 200, [{ sigla: "PA", nome: "Pará" }, { sigla: "SP", nome: "São Paulo" }]);
 
@@ -126,9 +168,9 @@ export async function mockApi(page: Page, seed: Partial<MockState> = {}): Promis
   return state;
 }
 
-export async function login(page: Page) {
+export async function login(page: Page, username = "admin") {
   await page.goto("/login");
-  await page.getByLabel("Usuário").fill("admin");
+  await page.getByLabel("Usuário").fill(username);
   await page.getByLabel("Senha").fill("senha-correta");
   await page.getByRole("button", { name: "Entrar" }).click();
   await page.getByRole("heading", { name: "Painel" }).waitFor();
